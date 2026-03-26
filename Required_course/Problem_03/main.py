@@ -3,12 +3,12 @@ import pickle
 
 
 def load_and_convert_inventory(file_path):
-    '''조건 1 & 2: CSV 내용을 읽어서 리스트(List) 객체로 변환 (출력 없음)'''
+    '''조건 1 & 2: CSV 내용을 읽어서 딕셔너리(Dict)의 리스트로 변환'''
     inventory_list = []
     try:
-        # PEP 8 준수: 대입문 = 앞뒤 공백
         with open(file_path, 'r', encoding='utf-8') as file:
-            reader = csv.reader(file)
+            # csv.reader 대신 csv.DictReader 사용
+            reader = csv.DictReader(file)
             for row in reader:
                 inventory_list.append(row)
         return inventory_list
@@ -22,40 +22,49 @@ def load_and_convert_inventory(file_path):
 
 
 def sort_by_flammability(inventory_data):
-    '''조건 3: 배열 내용을 인화성이 높은 순(내림차순)으로 정렬'''
-    if len(inventory_data) <= 1:
+    '''조건 3: 딕셔너리 배열을 인화성(Flammability) 기준으로 내림차순 정렬'''
+    if not inventory_data:
         return inventory_data
-    header = inventory_data[0]
-    data_rows = inventory_data[1:]
-    sorted_data = sorted(data_rows, key=lambda x: float(x[4]), reverse=True)
-    return [header] + sorted_data
+        
+    # 딕셔너리는 헤더를 분리할 필요가 없습니다.
+    # 인덱스 [4] 대신, 이름표 'Flammability'를 직관적으로 호출합니다.
+    sorted_data = sorted(inventory_data, key=lambda x: float(x['Flammability']), reverse=True)
+    return sorted_data
 
 
 def filter_high_flammability(inventory_data, threshold=0.7):
     '''조건 4: 인화성 지수가 특정 수치 이상인 목록 필터링'''
-    if len(inventory_data) <= 1:
+    if not inventory_data:
         return inventory_data
-    header = inventory_data[0]
+        
     filtered_rows = []
-    for row in inventory_data[1:]:
-        if float(row[4]) >= threshold:
+    for row in inventory_data:
+        if float(row['Flammability']) >= threshold:
             filtered_rows.append(row)
-    return [header] + filtered_rows
+    return filtered_rows
 
 
 def save_list_to_csv(data_list, file_path):
-    '''조건 5: 추출된 리스트를 CSV 포맷으로 저장 (출력 없음)'''
+    '''조건 5: 추출된 딕셔너리 리스트를 CSV 포맷으로 저장'''
+    if not data_list:
+        return
+        
     try:
         with open(file_path, 'w', encoding='utf-8', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(data_list)
+            # 딕셔너리의 키(Key)들을 추출하여 CSV의 헤더로 사용합니다.
+            fieldnames = data_list[0].keys()
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            
+            writer.writeheader()  # 첫 줄에 컬럼명(헤더)을 써줍니다.
+            writer.writerows(data_list)  # 나머지 딕셔너리 데이터를 기록합니다.
     except Exception as e:
         print('CSV 파일 저장 중 오류가 발생했습니다:', e)
 
 
 def save_list_to_binary(data_list, file_path):
-    '''보너스 1: 정렬된 배열을 이진 파일(Binary) 형태로 저장 (출력 없음)'''
+    '''보너스 1: 딕셔너리 배열을 이진 파일(Binary) 형태로 저장'''
     try:
+        # pickle은 딕셔너리 리스트도 완벽하게 압축 포장합니다.
         with open(file_path, 'wb') as file:
             pickle.dump(data_list, file)
     except Exception as e:
@@ -96,15 +105,13 @@ if __name__ == '__main__':
         
         # 3. 이진 파일에서 내용 다시 읽어 들이기
         restored_inventory = load_list_from_binary(binary_file)
-        
-        # --- [최종 출력 요구사항 딱 2가지 실행] ---
-        
+
         # 출력 1: 인화성이 0.7 이상 되는 목록
-        print('--- [1. 인화성 0.7 이상 격리 대상 목록] ---')
+        print('--- [1. 인화성 0.7 이상 격리 대상 목록 (딕셔너리 구조)] ---')
         for item in hazardous_inventory:
-            print(item)
+            print(*item.values(), sep=', ')
             
         # 출력 2: 이진 파일에서 복원한 전체 목록
-        print('\n--- [2. 이진 파일(Mars_Base_Inventory_List.bin) 복원 내용] ---')
+        print('\n--- [2. 이진 파일(Mars_Base_Inventory_List.bin) 복원 내용 (딕셔너리 구조)] ---')
         for item in restored_inventory:
-            print(item)
+            print(*item.values(), sep=', ')
