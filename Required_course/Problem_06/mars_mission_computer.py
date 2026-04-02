@@ -1,5 +1,4 @@
 import random
-import os
 import unicodedata
 from datetime import datetime
 
@@ -118,11 +117,21 @@ def format_psv_cell(text, target_width):
 # ---------------------------------------------------------
 def save_csv_log(data, date_str):
     """
-    데이터를 텍스트 파일에 기록합니다.
+    os 모듈 없이 try-except 예외 처리를 이용해 
+    파일 존재 여부를 확인하고 로그를 기록합니다.
     """
     file_name = f"mars_env_log_{date_str}.csv"
-    file_exists = os.path.exists(file_name)
     
+    # 파일이 존재하고 내용이 있는지 먼저 확인 시도
+    file_exists = False
+    try:
+        with open(file_name, 'r', encoding='utf-8-sig') as f:
+            if f.read(1): # 딱 한 글자라도 읽어지면 파일이 비어있지 않음
+                file_exists = True
+    except FileNotFoundError:
+        # 파일이 아예 없는 경우
+        file_exists = False
+
     log_format = {
         'timestamp': ('📅 시각', 22),
         'mars_base_internal_temperature': ('🌡️ 내온', 12),
@@ -136,10 +145,10 @@ def save_csv_log(data, date_str):
     
     ordered_keys = list(log_format.keys())
     
-    with open(file_name, 'a', encoding='utf-8') as f:
-        # 헤더 작성
-        if not file_exists or os.path.getsize(file_name) == 0:
-            # 이제 각 셀이 스스로 구분자를 달고 나오므로 단순 join만 수행합니다.
+    # 기록 시작
+    with open(file_name, 'a', encoding='utf-8-sig') as f:
+        # 헤더 작성 (파일이 새로 생성되었거나 비어있을 때만)
+        if not file_exists:
             header = "".join(format_psv_cell(log_format[k][0], log_format[k][1]) for k in ordered_keys)
             f.write(header + "\n")
         
