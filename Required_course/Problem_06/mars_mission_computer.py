@@ -18,24 +18,13 @@ class DummySensor:
     # ---------------------------------------------------------
     # [1] 범위 설정 상수
     _CONFIG = {
-        'internal_temp': (18, 30),      # 내온 (°C)
-        'external_temp': (0, 21),       # 외온 (°C)
-        'internal_humidity': (50, 60),  # 습도 (%)
-        'external_lux': (500, 715),     # 광량 (W/m2)
-        'internal_co2': (0.02, 0.1),    # CO2 (%)
-        'internal_o2': (4, 7),          # O2 (%)
-        'internal_pressure': (950, 1050)# 기압 (hPa)
-    }
-
-    # [2] 키 매핑 상수
-    _KEY_MAP = {
-        'internal_temp': 'mars_base_internal_temperature',
-        'external_temp': 'mars_base_external_temperature',
-        'internal_humidity': 'mars_base_internal_humidity',
-        'external_lux': 'mars_base_external_illuminance',
-        'internal_co2': 'mars_base_internal_co2',
-        'internal_o2': 'mars_base_internal_oxygen',
-        'internal_pressure': 'mars_base_internal_pressure'
+        'mars_base_internal_temperature': (18, 30),
+        'mars_base_external_temperature': (0, 21),
+        'mars_base_internal_humidity': (50, 60),
+        'mars_base_external_illuminance': (500, 715),
+        'mars_base_internal_co2': (0.02, 0.1),
+        'mars_base_internal_oxygen': (4, 7),
+        'mars_base_internal_pressure': (950, 1050)
     }
 
     def __init__(self):
@@ -59,8 +48,7 @@ class DummySensor:
         약 15%의 확률로 우발적인 이상 수치가 발생하도록 시뮬레이션합니다.
         """
 
-        for cfg_key, (min_val, max_val) in self._CONFIG.items():
-            sensor_key = self._KEY_MAP[cfg_key]
+        for sensor_key, (min_val, max_val) in self._CONFIG.items():
             
             # 자연스러운 에러 발생 시뮬레이션 (각 센서마다 15% 확률로 에러 발생)
             if random.random() <= 0.15: 
@@ -91,11 +79,9 @@ class DummySensor:
         result['timestamp'] = current_time
         
         # [핵심] 사전 객체를 순회하며 1:1로 범위를 대조하여 🚨/✅ 마킹
-        for cfg_key, (min_v, max_v) in self._CONFIG.items():
-            s_key = self._KEY_MAP[cfg_key]
-            val = result[s_key]
-            result[f"{s_key}_status"] = "🚨" if val < min_v or val > max_v else "✅"
-        
+        for cfg_key, (min_v, max_v) in self._CONFIG.items():  # 사전 객체 키
+            val = result[cfg_key]
+            result[f"{cfg_key}_status"] = "🚨" if val < min_v or val > max_v else "✅"
         return result
 
 # =====================================================================
