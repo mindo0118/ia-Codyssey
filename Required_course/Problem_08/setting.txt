@@ -1,0 +1,14 @@
+# Mission computer output settings
+# true = include key in JSON output
+# false = hide key in JSON output
+
+OS_Name=true
+OS_Version=true
+CPU_Type=true
+CPU_Cores=true
+Total_Memory_Size_GB=true
+
+CPU_Usage=true
+Memory_Usage=true
+Timestamp=true
+Errors=true
